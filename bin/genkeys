@@ -1,0 +1,5 @@
+#!/bin/bash
+private=`wg genkey`
+public=`wg pubkey <<< $private`
+echo "PublicKey: $public"
+echo "PrivateKey: $private"

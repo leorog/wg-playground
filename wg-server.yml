@@ -1,0 +1,71 @@
+#cloud-config
+
+disable_root: true
+package_update: true
+
+apt:
+  sources:
+    wireguard-ppa:
+      source: "ppa:wireguard/wireguard"
+
+users:
+  - name: leorog
+    shell: /bin/bash
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    ssh_authorized_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCbSkzTyWtwpKBYExQ5Bdx+3kHWusJWcoHLbSfxnjCA8Z2+kmES2Mg0UpLNJZIzy0hb2vlbfbbAHHDfhXW+JT61RIhNWa1gL06+rBCK+jsiQyQcZGL7oEiFpsiaCjoXUN+ZvDGd3mrMHgokzgN/b5ddlXqwKXw10XbFfjItUwb0xx2jNyLf6R4gqoFUNcrYJJzXxz0pjQGG3K7GsMP0iT4RJDXfIQxb6ypVJ8Jf36BFVRfxYUah4suV08Lg8VKbAJ3MTX0tIDCX0UhXc6zHDeAfjYQb2dOrx6+OtTbgAAVwDdMaZ+5MDZQ6f5YqMLxTHJWr37flUI9DWZdV++HKiNKl leorog@leorog-pc"
+
+packages:
+  - wireguard
+  - unbound
+
+write_files:
+  - path: /etc/wireguard/wg0.conf
+    content: |
+      [Interface]
+      Address = 10.2.0.1/24
+      SaveConfig = true
+      ListenPort = 5555
+      PostUp = wg set %i private-key /etc/wireguard/wg0.key
+      PostUp = iptables -A FORWARD -i %i -j ACCEPT
+      PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+      PostDown = iptables -D FORWARD -i %i -j ACCEPT
+      PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+  - path: /etc/unbound/unbound.conf
+    content: |
+      server:
+        num-threads: 4
+        verbosity: 1
+        root-hints: "/var/lib/unbound/root.hints"
+        auto-trust-anchor-file: "/var/lib/unbound/root.key"
+        interface: 10.2.0.1
+        max-udp-size: 3072
+        access-control: 0.0.0.0/0        refuse
+        access-control: 127.0.0.1        allow
+        access-control: 10.2.0.0/24      allow
+        private-address: 10.2.0.0/24
+        hide-identity: yes
+        hide-version: yes
+        harden-glue: yes
+        harden-dnssec-stripped: yes
+        harden-referral-path: yes
+        unwanted-reply-threshold: 10000000
+        val-log-level: 1
+        cache-min-ttl: 1800 
+        cache-max-ttl: 14400
+        prefetch: yes
+        prefetch-key: yes
+        do-ip6: no
+
+bootcmd:
+  - sysctl -w net.ipv4.ip_forward=1
+
+runcmd:
+  - curl -o /var/lib/unbound/root.hints https://www.internic.net/domain/named.cache
+  - wg genkey | tee /etc/wireguard/wg0.key | wg pubkey > /etc/wireguard/wg0.pub
+  - chmod -v 600 /etc/wireguard/wg0.conf /etc/wireguard/wg0.key /etc/wireguard/wg0.pub
+  - chown -R unbound:unbound /var/lib/unbound
+  - systemctl enable unbound
+  - systemctl enable wg-quick@wg0
+  - systemctl start --no-block unbound
+  - systemctl start --no-block wg-quick@wg0

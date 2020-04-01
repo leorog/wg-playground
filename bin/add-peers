@@ -1,0 +1,8 @@
+#!/bin/bash
+# https://lists.zx2c4.com/pipermail/wireguard/2018-December/003703.html
+
+set -eo pipefail
+
+server=$(terraform output --json | jq -r '."server_ip".value' )
+rsync -vr --rsync-path="sudo rsync" peers.conf leorog@${server}:/etc/wireguard/peers.conf
+ssh leorog@${server} -t "sudo wg addconf wg0 /etc/wireguard/peers.conf; sudo wg"

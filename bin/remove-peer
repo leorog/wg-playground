@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -eo pipefail
+
+server=$(terraform output --json | jq -r '."server_ip".value' )
+ssh leorog@${server} -t "sudo wg set wg0 peer $1 remove"
