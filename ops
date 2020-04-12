@@ -1,1 +1,1 @@
-{"version":1,"ops":[{"type":1,"author":{"id":"f431cd1a9951e9254c45e0d490e343e91d1882e7"},"timestamp":1586696291,"title":"git-bug hello world","message":"","files":null}]}
+{"version":1,"ops":[{"type":6,"author":{"id":"f431cd1a9951e9254c45e0d490e343e91d1882e7"},"timestamp":1586696306,"target":"0e790efa31deef79057a74eb0f6a397c77b33a6fa42dc8611e9f06baf70b51ee","message":"This is a bug from git-bug","files":null}]}
