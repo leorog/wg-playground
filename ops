@@ -1,1 +1,1 @@
-{"version":1,"ops":[{"type":4,"author":{"id":"f431cd1a9951e9254c45e0d490e343e91d1882e7"},"timestamp":1586696385,"status":2}]}
+{"version":1,"ops":[{"type":5,"author":{"id":"f431cd1a9951e9254c45e0d490e343e91d1882e7"},"timestamp":1586696452,"added":["some-label","wip"],"removed":null}]}
